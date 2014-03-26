@@ -1,23 +1,6 @@
 require 'spec_helper'
 
 describe User do
-
-  describe "edit" do
-    let(:user) { FactoryGirl.create(:user) }
-    before { visit edit_user_path(user) }
-
-    describe "page" do
-      it { should have_content("Update your profile") }
-      it { should have_title("Edit user") }
-      it { should have_link('change', href: 'http://gravatar.com/emails') }
-    end
-
-    describe "with invalid information" do
-      before { click_button "Save changes" }
-
-      it { should have_content('error') }
-    end
-  end
   
   before do
     @user = User.new(name: "Example User", email: "user@example.com",
@@ -29,12 +12,20 @@ describe User do
   it { should respond_to(:name) }
   it { should respond_to(:email) }
   it { should respond_to(:password_digest) } 
-  it { should respond_to(:password_confirmation) }
-  it { should respond_to(:remember_token) }
-  it { should respond_to(:authenticate) }
+  it { should respond_to(:password_confirmation) } 
 
   it { should be_valid }
+  it { should_not be_admin }
 
+  describe "with admin attribute set to 'true'" do
+    before do
+      @user.save!
+      @user.toggle!(:admin)
+    end
+
+    it { should be_admin }
+  end
+  
   describe "when name is not present" do
     before { @user.name = " " }
     it { should_not be_valid }
@@ -50,11 +41,6 @@ describe User do
     it { should_not be_valid }
   end
 
-  describe "remember token" do
-    before { @user.save }
-    its(:remember_token) { should_not be_blank }
-  end
-  
   describe "when email format is invalid" do
     it "should be invalid" do
       addresses = %w[user@foo,com user_at_foo.org example.user@foo.
